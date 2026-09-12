@@ -32,7 +32,7 @@ def get_base_ydl_opts() -> dict:
         'no_warnings': True,
         'extractor_args': {
             'youtube': {
-                'player_client': ['android', 'ios', 'mweb'],
+                'player_client': ['visionos', 'android'],
             }
         },
         'http_headers': {
@@ -62,9 +62,9 @@ def extract_video_info(url: str) -> Dict[str, Any]:
             info = ydl.extract_info(url, download=False)
     except Exception as e:
         err_msg = str(e).lower()
-        if "bot" in err_msg or "sign in" in err_msg or "confirm you" in err_msg:
+        if any(k in err_msg for k in ["bot", "sign in", "confirm you", "requested format", "available formats"]):
             fallback_opts = dict(ydl_opts)
-            fallback_opts['extractor_args'] = {'youtube': {'player_client': ['android']}}
+            fallback_opts['extractor_args'] = {'youtube': {'player_client': ['visionos']}}
             with yt_dlp.YoutubeDL(fallback_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
         else:
@@ -248,7 +248,7 @@ def _execute_yt_dlp(job_id: str, url: str, format_type: str, quality: str, audio
         # Video format
         if quality and quality.isdigit():
             h = int(quality)
-            ydl_opts['format'] = f"bestvideo[height<={h}]+bestaudio/best[height<={h}]/best"
+            ydl_opts['format'] = f"bestvideo[height<={h}]+bestaudio/best[height<={h}]/bestvideo/best"
         else:
             ydl_opts['format'] = 'bestvideo+bestaudio/best'
         ydl_opts['merge_output_format'] = 'mp4'
