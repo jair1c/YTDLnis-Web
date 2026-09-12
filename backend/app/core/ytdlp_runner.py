@@ -23,20 +23,36 @@ def format_bytes(size: Optional[int]) -> str:
         n += 1
     return f"{size:.1f} {units[n]}"
 
-def sanitize_filename(name: str) -> str:
-    return re.sub(r'[\\/*?:"<>|]', "", name).strip()
+COOKIES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "cookies.txt"))
+
+def get_base_ydl_opts() -> dict:
+    opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'web'],
+            }
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+    }
+    if os.path.exists(COOKIES_PATH):
+        opts['cookiefile'] = COOKIES_PATH
+    return opts
 
 def extract_video_info(url: str) -> Dict[str, Any]:
     """
     Extracts metadata, formats and thumbnails using yt-dlp.
     Does not download the video.
     """
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
+    ydl_opts = get_base_ydl_opts()
+    ydl_opts.update({
         'extract_flat': False,
         'skip_download': True,
-    }
+    })
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -201,13 +217,12 @@ def _progress_hook(d: dict, job_id: str):
 def _execute_yt_dlp(job_id: str, url: str, format_type: str, quality: str, audio_ext: str, trim_start: Optional[str], trim_end: Optional[str]):
     output_template = os.path.join(DOWNLOADS_DIR, f"{job_id}_%(title).100s.%(ext)s")
 
-    ydl_opts = {
+    ydl_opts = get_base_ydl_opts()
+    ydl_opts.update({
         'outtmpl': output_template,
         'progress_hooks': [lambda d: _progress_hook(d, job_id)],
-        'quiet': True,
-        'no_warnings': True,
         'windowsfilenames': True,
-    }
+    })
 
     if format_type == "audio":
         ydl_opts['format'] = 'bestaudio/best'
