@@ -1,0 +1,21 @@
+# Python & Virtualenv
+backend/venv/
+backend/.venv/
+**/__pycache__/
+*.py[cod]
+*$py.class
+backend/downloads/*
+!backend/downloads/.gitkeep
+
+# Node & Frontend
+frontend/node_modules/
+frontend/.vite/
+
+# Logs & Temporary
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
