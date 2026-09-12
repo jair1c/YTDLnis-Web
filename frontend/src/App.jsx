@@ -37,8 +37,17 @@ export default function App() {
   });
   const [tempApiUrl, setTempApiUrl] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [hasCookies, setHasCookies] = useState(false);
+  const [cookiesText, setCookiesText] = useState('');
 
   const API_BASE = (import.meta.env.VITE_API_URL || customApiUrl || '').replace(/\/$/, '');
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/cookies/status`)
+      .then(r => r.json())
+      .then(d => { if (d.has_cookies) setHasCookies(true); })
+      .catch(() => {});
+  }, [API_BASE]);
 
   const [url, setUrl] = useState('');
   const [loadingInfo, setLoadingInfo] = useState(false);
@@ -336,6 +345,73 @@ export default function App() {
                 Guardar
               </button>
             </div>
+
+            {/* Cookies section */}
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#cbd5e1' }}>
+                  🍪 Cookies de YouTube (Anti-Bot y videos +18)
+                </h4>
+                {hasCookies && (
+                  <span style={{ fontSize: '11px', color: '#4ade80', fontWeight: '600', background: 'rgba(74, 222, 128, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
+                    ✓ Cookies activas
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }}>
+                Si YouTube solicita verificación anti-bot en algún video, pega aquí tus cookies en formato Netscape / cookies.txt:
+              </p>
+              <textarea
+                placeholder="# Netscape HTTP Cookie File&#10;.youtube.com TRUE / FALSE ..."
+                value={cookiesText}
+                onChange={(e) => setCookiesText(e.target.value)}
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  background: 'rgba(15, 23, 42, 0.8)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  outline: 'none',
+                  resize: 'vertical',
+                  marginBottom: '8px'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                {hasCookies && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await fetch(`${API_BASE}/api/cookies`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cookies: '' }) });
+                      setHasCookies(false);
+                      setCookiesText('');
+                    }}
+                    style={{ padding: '6px 12px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: 'none', fontSize: '12px', cursor: 'pointer' }}
+                  >
+                    Borrar cookies
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!cookiesText.trim()) return;
+                    const res = await fetch(`${API_BASE}/api/cookies`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cookies: cookiesText }) });
+                    if (res.ok) {
+                      setHasCookies(true);
+                      alert('¡Cookies guardadas con éxito!');
+                    }
+                  }}
+                  className="btn-glow"
+                  style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Guardar Cookies
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
         

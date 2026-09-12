@@ -9,10 +9,30 @@ from app.core.ytdlp_runner import (
     extract_video_info,
     start_download_task,
     jobs,
-    DOWNLOADS_DIR
+    DOWNLOADS_DIR,
+    COOKIES_PATH
 )
 
 router = APIRouter()
+
+class CookiesRequest(BaseModel):
+    cookies: str
+
+@router.get("/cookies/status")
+async def get_cookies_status():
+    exists = os.path.exists(COOKIES_PATH) and os.path.getsize(COOKIES_PATH) > 10
+    return {"has_cookies": exists}
+
+@router.post("/cookies")
+async def save_cookies(req: CookiesRequest):
+    content = req.cookies.strip()
+    if not content:
+        if os.path.exists(COOKIES_PATH):
+            os.remove(COOKIES_PATH)
+        return {"status": "cleared", "has_cookies": False}
+    with open(COOKIES_PATH, "w", encoding="utf-8") as f:
+        f.write(content)
+    return {"status": "saved", "has_cookies": True}
 
 class InfoRequest(BaseModel):
     url: str
