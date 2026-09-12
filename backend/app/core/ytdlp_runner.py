@@ -32,7 +32,7 @@ def get_base_ydl_opts() -> dict:
         'no_warnings': True,
         'extractor_args': {
             'youtube': {
-                'player_client': ['tv_embedded', 'android', 'ios'],
+                'player_client': ['android', 'ios', 'mweb'],
             }
         },
         'http_headers': {
