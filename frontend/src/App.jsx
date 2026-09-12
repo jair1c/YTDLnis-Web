@@ -15,7 +15,8 @@ import {
   Clipboard, 
   X,
   ListVideo,
-  Sparkles
+  Sparkles,
+  Settings
 } from 'lucide-react';
 
 const PLATFORMS = [
@@ -26,9 +27,19 @@ const PLATFORMS = [
   { name: 'SoundCloud', color: 'from-orange-500 to-amber-600', icon: '☁' },
 ];
 
-const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
-
 export default function App() {
+  const [customApiUrl, setCustomApiUrl] = useState(() => {
+    try {
+      return localStorage.getItem('ytdlnis_api_url') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [tempApiUrl, setTempApiUrl] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+
+  const API_BASE = (import.meta.env.VITE_API_URL || customApiUrl || '').replace(/\/$/, '');
+
   const [url, setUrl] = useState('');
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [videoData, setVideoData] = useState(null);
@@ -240,12 +251,93 @@ export default function App() {
                 <span>{p.name}</span>
               </div>
             ))}
+
+            <button
+              onClick={() => { setShowSettings(!showSettings); setTempApiUrl(customApiUrl); }}
+              title="Configurar servidor backend"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: customApiUrl ? 'rgba(99, 102, 241, 0.2)' : 'rgba(30, 41, 59, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: customApiUrl ? '#818cf8' : '#94a3b8',
+                cursor: 'pointer'
+              }}
+            >
+              <Settings size={16} />
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
       <main style={{ flex: 1, maxWidth: '840px', width: '100%', margin: '0 auto', padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+        
+        {/* Backend Configuration Banner for Vercel / Remote Hosting */}
+        {(showSettings || (!API_BASE && typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')) && (
+          <div className="glass-panel" style={{ borderRadius: '20px', padding: '20px', border: '1px solid rgba(139, 92, 246, 0.4)', background: 'rgba(30, 27, 75, 0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Settings size={20} color="#a78bfa" />
+                <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f8fafc' }}>
+                  Conectar con Servidor Backend (yt-dlp & FFmpeg)
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSettings(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '14px', lineHeight: 1.5 }}>
+              Para procesar descargas en la nube (ej. Vercel), ingresa la dirección pública de tu backend desplegado en Render, Railway o tu VPS:
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
+                placeholder="https://tu-backend.onrender.com"
+                value={tempApiUrl}
+                onChange={(e) => setTempApiUrl(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  background: 'rgba(15, 23, 42, 0.8)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+              />
+              <button
+                onClick={() => {
+                  const cleaned = tempApiUrl.trim().replace(/\/$/, '');
+                  setCustomApiUrl(cleaned);
+                  try {
+                    localStorage.setItem('ytdlnis_api_url', cleaned);
+                  } catch {}
+                  setShowSettings(false);
+                }}
+                className="btn-glow"
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* Search / Input Card */}
         <div className="glass-panel" style={{ borderRadius: '24px', padding: '24px' }}>
