@@ -11,10 +11,12 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 
-# Install FFmpeg and required packages
+# Install FFmpeg, Node.js (for YouTube JS challenge solving) and required packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
+    nodejs \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
